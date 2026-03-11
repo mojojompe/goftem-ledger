@@ -33,10 +33,19 @@ const Dashboard = () => {
         }
     };
 
+    const showReceipt = (saleData) => {
+        setCurrentReceiptData(saleData);
+        setShowReceiptModal(true);
+    };
+
     const handleAddRecord = async (newSale) => {
         try {
             const savedSale = await salesService.createSale(newSale);
             setSales([savedSale, ...sales]);
+            // Show receipt immediately if entered as paid
+            if (savedSale.paymentStatus === 'paid') {
+                showReceipt(savedSale);
+            }
         } catch (error) {
             alert('Failed to add sale record');
         }
@@ -46,8 +55,7 @@ const Dashboard = () => {
         try {
             const updatedSale = await salesService.updatePaymentStatus(sale._id, 'paid');
             setSales(sales.map(s => s._id === sale._id ? updatedSale : s));
-            setCurrentReceiptData(updatedSale);
-            setShowReceiptModal(true);
+            showReceipt(updatedSale);
         } catch (error) {
             console.error('Error marking paid:', error);
         }
@@ -78,6 +86,13 @@ const Dashboard = () => {
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
+    /** Capture receipt as a PNG blob from the DOM */
+    const captureReceiptBlob = async () => {
+        if (!receiptRef.current) return null;
+        const canvas = await html2canvas(receiptRef.current, { scale: 2, useCORS: true });
+        return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    };
+
     const downloadReceipt = async () => {
         if (!receiptRef.current) return;
         try {
@@ -93,9 +108,28 @@ const Dashboard = () => {
         }
     };
 
-    const shareReceiptWhatsApp = () => {
-        const message = `Hello ${currentReceiptData.buyerName}, here is your receipt from GOFTEM STORES.\n\nItem: ${currentReceiptData.item}\nAmount: ₦${Number(currentReceiptData.price).toLocaleString()}\nStatus: PAID\nDate: ${format(new Date(currentReceiptData.date), 'MMM dd, yyyy')}\n\nThank you for your business!`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    const shareReceiptWhatsApp = async () => {
+        const textMessage = `Hello ${currentReceiptData.buyerName}, here is your receipt from GOFTEM STORES.\n\nItem: ${currentReceiptData.item}\nAmount: ₦${Number(currentReceiptData.price).toLocaleString()}\nStatus: PAID ✅\nDate: ${format(new Date(currentReceiptData.date), 'MMM dd, yyyy')}\n\nThank you for your business! 🙏`;
+
+        // Try to share image via Web Share API (works on mobile)
+        try {
+            const blob = await captureReceiptBlob();
+            if (blob && navigator.canShare && navigator.canShare({ files: [new File([blob], 'receipt.png', { type: 'image/png' })] })) {
+                const file = new File([blob], `GOFTEM-Receipt-${currentReceiptData.buyerName}.png`, { type: 'image/png' });
+                await navigator.share({
+                    title: 'GOFTEM STORES Receipt',
+                    text: textMessage,
+                    files: [file],
+                });
+                return;
+            }
+        } catch (err) {
+            // Web Share not supported or user cancelled — fall through to WhatsApp link
+            if (err.name === 'AbortError') return;
+        }
+
+        // Fallback: open WhatsApp with text message
+        window.open(`https://wa.me/?text=${encodeURIComponent(textMessage)}`, '_blank');
     };
 
     // Stats
@@ -126,7 +160,6 @@ const Dashboard = () => {
             <Header />
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-20">
-                {/* Summary */}
                 <SummaryCards
                     totalSales={totalSalesToday}
                     pendingPayments={pendingPayments}
@@ -134,10 +167,8 @@ const Dashboard = () => {
                     totalRevenue={totalRevenueToday}
                 />
 
-                {/* Entry Form */}
                 <SalesEntryForm onAddRecord={handleAddRecord} />
 
-                {/* Records section */}
                 <div>
                     <FilterSection currentFilter={filter} onFilterChange={setFilter} />
                     {loading ? (
@@ -164,7 +195,7 @@ const Dashboard = () => {
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                             <div>
-                                <p className="font-black text-gray-900">Payment Recorded!</p>
+                                <p className="font-black text-gray-900">Payment Confirmed ✅</p>
                                 <p className="text-xs text-gray-400 mt-0.5">Receipt ready to share</p>
                             </div>
                             <button
@@ -186,13 +217,13 @@ const Dashboard = () => {
                                 onClick={downloadReceipt}
                                 className="flex-1 flex items-center justify-center gap-2 bg-black text-white font-bold py-3.5 rounded-xl active:scale-95 transition-all text-sm"
                             >
-                                <FiDownload size={16} /> Download
+                                <FiDownload size={16} /> Download PDF
                             </button>
                             <button
                                 onClick={shareReceiptWhatsApp}
                                 className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-3.5 rounded-xl active:scale-95 transition-all text-sm hover:bg-green-600"
                             >
-                                <FaWhatsapp size={18} /> WhatsApp
+                                <FaWhatsapp size={18} /> Share
                             </button>
                         </div>
                     </div>
