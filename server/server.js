@@ -9,16 +9,29 @@ connectDB();
 
 const app = express();
 
-// Middleware
-const corsOptions = {
-    origin: [
-        'https://goftem-sales.vercel.app',
-        'http://localhost:5173',
-        'http://localhost:3000',
-    ],
-    credentials: true,
-};
-app.use(cors(corsOptions));
+// CORS — must be FIRST, before all routes
+const allowedOrigins = [
+    'https://goftem-sales.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+];
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    next();
+});
+
 app.use(express.json());
 
 // Routes
