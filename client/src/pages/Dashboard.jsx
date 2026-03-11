@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import SummaryCards from '../components/SummaryCards';
 import SalesEntryForm from '../components/SalesEntryForm';
 import FilterSection from '../components/FilterSection';
-import RecordsTable, { getSaleTotal } from '../components/RecordsTable';
+import RecordsTable, { getSaleTotal, getPaidTotal } from '../components/RecordsTable';
 import Receipt from '../components/Receipt';
 import { format, isToday } from 'date-fns';
 import jsPDF from 'jspdf';
@@ -61,6 +61,19 @@ const Dashboard = () => {
         }
     };
 
+    const handleMarkItemPaid = async (saleId, itemIndex) => {
+        try {
+            const updatedSale = await salesService.updateItemPaymentStatus(saleId, itemIndex, 'paid');
+            setSales(sales.map(s => s._id === saleId ? updatedSale : s));
+            // If all items now paid, show receipt
+            if (updatedSale.paymentStatus === 'paid') {
+                showReceipt(updatedSale);
+            }
+        } catch (error) {
+            console.error('Error marking item paid:', error);
+        }
+    };
+
     const handleMarkDelivered = async (id) => {
         try {
             const updatedSale = await salesService.updateDeliveryStatus(id, 'delivered');
@@ -82,11 +95,17 @@ const Dashboard = () => {
     };
 
     const handleWhatsAppReminder = (sale) => {
-        const itemsList = sale.items && sale.items.length > 0
-            ? sale.items.map(i => `• ${i.name}: ₦${i.price.toLocaleString()}`).join('\n')
-            : `• ${sale.item}: ₦${sale.price?.toLocaleString()}`;
-        const total = getSaleTotal(sale);
-        const message = `Hello ${sale.buyerName}, this is GOFTEM STORES.\n\nThis is a reminder that your payment for the following items is still pending:\n\n${itemsList}\n\nTotal: ₦${total.toLocaleString()}\n\nThank you.`;
+        // Only list items that are still pending
+        let unpaidItems;
+        if (sale.items && sale.items.length > 0) {
+            unpaidItems = sale.items.filter(i => i.paymentStatus !== 'paid');
+        } else {
+            unpaidItems = [{ name: sale.item, price: sale.price }];
+        }
+        if (unpaidItems.length === 0) return;
+        const itemsList = unpaidItems.map(i => `• ${i.name}: ₦${i.price.toLocaleString()}`).join('\n');
+        const unpaidTotal = unpaidItems.reduce((s, i) => s + i.price, 0);
+        const message = `Hello ${sale.buyerName}, this is GOFTEM STORES.\n\nThis is a reminder that the following payment(s) are still pending:\n\n${itemsList}\n\nOutstanding: ₦${unpaidTotal.toLocaleString()}\n\nThank you.`;
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
@@ -187,6 +206,7 @@ const Dashboard = () => {
                     ) : (
                         <RecordsTable
                             groupedSales={groupedSales}
+                            onMarkItemPaid={handleMarkItemPaid}
                             onMarkPaid={handleMarkPaid}
                             onMarkDelivered={handleMarkDelivered}
                             onDelete={handleDelete}

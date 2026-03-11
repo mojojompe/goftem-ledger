@@ -27,6 +27,15 @@ const updateDeliveryStatus = async (id, status) => {
     return response.data;
 };
 
+// Update a specific item's payment status within a sale
+const updateItemPaymentStatus = async (saleId, itemIndex, status) => {
+    const response = await axios.put(`${API_URL}/${saleId}`, {
+        paymentStatus: status,
+        itemIndex,
+    });
+    return response.data;
+};
+
 // Delete a sale
 const deleteSale = async (id) => {
     const response = await axios.delete(`${API_URL}/${id}`);
@@ -38,5 +47,6 @@ export const salesService = {
     createSale,
     updatePaymentStatus,
     updateDeliveryStatus,
+    updateItemPaymentStatus,
     deleteSale,
 };

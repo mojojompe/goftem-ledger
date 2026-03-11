@@ -12,7 +12,13 @@ const getSales = async (req, res) => {
 const createSale = async (req, res) => {
     const { date, buyerName, items, paymentStatus, deliveryStatus } = req.body;
     try {
-        const sale = new Sales({ date, buyerName, items, paymentStatus, deliveryStatus });
+        // If whole sale entered as paid, mark all items as paid too
+        const resolvedItems = (items || []).map(i => ({
+            ...i,
+            paymentStatus: paymentStatus === 'paid' ? 'paid' : (i.paymentStatus || 'pending'),
+        }));
+
+        const sale = new Sales({ date, buyerName, items: resolvedItems, paymentStatus, deliveryStatus });
         const createdSale = await sale.save();
         res.status(201).json(createdSale);
     } catch (error) {
@@ -21,17 +27,32 @@ const createSale = async (req, res) => {
 };
 
 const updateSale = async (req, res) => {
-    const { paymentStatus, deliveryStatus } = req.body;
+    const { paymentStatus, deliveryStatus, items, itemIndex } = req.body;
     try {
         const sale = await Sales.findById(req.params.id);
-        if (sale) {
-            sale.paymentStatus = paymentStatus !== undefined ? paymentStatus : sale.paymentStatus;
-            sale.deliveryStatus = deliveryStatus !== undefined ? deliveryStatus : sale.deliveryStatus;
-            const updatedSale = await sale.save();
-            res.json(updatedSale);
+        if (!sale) return res.status(404).json({ message: 'Sale not found' });
+
+        // Update a single item's payment status
+        if (itemIndex !== undefined && sale.items.length > 0) {
+            sale.items[itemIndex].paymentStatus = paymentStatus;
+
+            // Derive overall paymentStatus from all items
+            const allPaid = sale.items.every(i => i.paymentStatus === 'paid');
+            sale.paymentStatus = allPaid ? 'paid' : 'pending';
         } else {
-            res.status(404).json({ message: 'Sale not found' });
+            // Whole-sale update (legacy / delivery status)
+            if (paymentStatus !== undefined) {
+                sale.paymentStatus = paymentStatus;
+                // Also mark all items as paid/pending
+                if (sale.items.length > 0) {
+                    sale.items = sale.items.map(i => ({ ...i.toObject(), paymentStatus }));
+                }
+            }
+            if (deliveryStatus !== undefined) sale.deliveryStatus = deliveryStatus;
         }
+
+        const updatedSale = await sale.save();
+        res.json(updatedSale);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
