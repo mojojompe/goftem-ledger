@@ -121,17 +121,48 @@ const Dashboard = () => {
     };
 
     // ── Receipt generation ────────────────────────────────────────────────────
-    /** Capture receipt as canvas (waits for fonts/images) */
+    /** Clone receipt outside modal, capture full height, then clean up */
     const captureCanvas = useCallback(async () => {
         const el = receiptRef.current;
         if (!el) return null;
-        return html2canvas(el, {
-            scale: 3,
-            useCORS: true,
-            allowTaint: false,
-            backgroundColor: '#ffffff',
-            logging: false,
-        });
+
+        // Create a temp off-screen container with no overflow clipping
+        const container = document.createElement('div');
+        container.style.cssText = `
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: ${el.scrollWidth}px;
+            height: ${el.scrollHeight}px;
+            overflow: visible;
+            background: #ffffff;
+            z-index: -1;
+        `;
+        const clone = el.cloneNode(true);
+        clone.style.cssText = `
+            width: ${el.scrollWidth}px;
+            height: ${el.scrollHeight}px;
+            overflow: visible;
+        `;
+        container.appendChild(clone);
+        document.body.appendChild(container);
+
+        try {
+            const canvas = await html2canvas(clone, {
+                scale: 3,
+                useCORS: true,
+                allowTaint: false,
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: el.scrollWidth,
+                height: el.scrollHeight,
+                windowWidth: el.scrollWidth,
+                windowHeight: el.scrollHeight,
+            });
+            return canvas;
+        } finally {
+            document.body.removeChild(container);
+        }
     }, []);
 
     const downloadReceipt = async () => {
