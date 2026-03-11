@@ -89,7 +89,7 @@ const FilterSection = ({
 
                     {/* Date Customizer Dropdown */}
                     {showDateCustomizer && (
-                        <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20">
+                        <div className="absolute top-full right-0 sm:left-0 sm:right-auto mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20">
                             <div className="p-2 border-b border-gray-100">
                                 {PRESETS.map(preset => (
                                     <button

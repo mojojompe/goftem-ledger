@@ -269,8 +269,8 @@ const Dashboard = () => {
             <Header onSearchOpen={() => setShowSearch(true)} />
 
             {/* Main Tabs Navigation */}
-            <div className="bg-white border-b border-gray-100 px-4 sm:px-6 sticky top-[61px] z-40">
-                <div className="max-w-5xl mx-auto flex gap-6">
+            <div className="bg-white border-b border-gray-100 px-4 sm:px-6 sticky top-[56px] sm:top-[61px] z-40">
+                <div className="max-w-5xl mx-auto flex gap-6 overflow-x-auto scrollbar-hide">
                     <button
                         onClick={() => setActiveTab('records')}
                         className={`py-3.5 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors ${
