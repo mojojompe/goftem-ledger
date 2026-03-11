@@ -14,9 +14,9 @@ const FilterSection = ({ currentFilter, onFilterChange }) => {
                 <button
                     key={filter.id}
                     onClick={() => onFilterChange(filter.id)}
-                    className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${currentFilter === filter.id
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${currentFilter === filter.id
+                        ? 'bg-black text-white shadow-md'
+                        : 'bg-white text-gray-800 border border-gray-200 hover:bg-gray-50'
                         }`}
                 >
                     {filter.label}

@@ -46,7 +46,7 @@ const SalesEntryForm = ({ onAddRecord }) => {
                         name="date"
                         value={formData.date}
                         onChange={handleChange}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-gray-800 bg-white"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2 text-gray-800 bg-white"
                         required
                     />
                 </div>
@@ -58,7 +58,7 @@ const SalesEntryForm = ({ onAddRecord }) => {
                         value={formData.buyerName}
                         onChange={handleChange}
                         placeholder="Enter buyer name"
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-gray-800 bg-white"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2 text-gray-800 bg-white"
                         required
                     />
                 </div>
@@ -70,7 +70,7 @@ const SalesEntryForm = ({ onAddRecord }) => {
                         value={formData.item}
                         onChange={handleChange}
                         placeholder="Enter item name"
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-gray-800 bg-white"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2 text-gray-800 bg-white"
                         required
                     />
                 </div>
@@ -82,7 +82,7 @@ const SalesEntryForm = ({ onAddRecord }) => {
                         value={formData.price}
                         onChange={handleChange}
                         placeholder="0"
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-gray-800 bg-white"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2 text-gray-800 bg-white"
                         required
                     />
                 </div>
@@ -92,7 +92,7 @@ const SalesEntryForm = ({ onAddRecord }) => {
                         name="paymentStatus"
                         value={formData.paymentStatus}
                         onChange={handleChange}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-gray-800 bg-white bg-none"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2 text-gray-800 bg-white bg-none"
                     >
                         <option value="pending">Pending</option>
                         <option value="paid">Paid</option>
@@ -104,7 +104,7 @@ const SalesEntryForm = ({ onAddRecord }) => {
                         name="deliveryStatus"
                         value={formData.deliveryStatus}
                         onChange={handleChange}
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 text-gray-800 bg-white bg-none"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2 text-gray-800 bg-white bg-none"
                     >
                         <option value="pending">Pending</option>
                         <option value="delivered">Delivered</option>

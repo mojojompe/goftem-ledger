@@ -19,8 +19,8 @@ const SummaryCards = ({ totalSales, pendingPayments, paidOrders, totalRevenue })
             <SummaryCard
                 title="Total Sales Today"
                 value={totalSales}
-                icon={<FiTrendingUp className="w-6 h-6 text-blue-600" />}
-                colorClass="bg-blue-100"
+                icon={<FiTrendingUp className="w-6 h-6 text-black" />}
+                colorClass="bg-gray-100"
             />
             <SummaryCard
                 title="Pending Payments"
@@ -37,8 +37,8 @@ const SummaryCards = ({ totalSales, pendingPayments, paidOrders, totalRevenue })
             <SummaryCard
                 title="Total Revenue Today"
                 value={`₦${totalRevenue.toLocaleString()}`}
-                icon={<FiDollarSign className="w-6 h-6 text-purple-600" />}
-                colorClass="bg-purple-100"
+                icon={<FiDollarSign className="w-6 h-6 text-yellow-500" />}
+                colorClass="bg-black text-yellow-500"
             />
         </div>
     );

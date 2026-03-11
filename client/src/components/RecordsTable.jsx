@@ -65,7 +65,7 @@ const RecordsTable = ({
                                                     <button
                                                         onClick={() => onWhatsAppReminder(sale)}
                                                         title="WhatsApp Reminder"
-                                                        className="p-1.5 text-blue-500 hover:bg-blue-50 rounded bg-white border border-blue-100 transition-colors"
+                                                        className="p-1.5 text-green-500 hover:bg-green-50 rounded bg-white border border-green-100 transition-colors"
                                                     >
                                                         <FiMessageCircle size={16} />
                                                     </button>
@@ -83,7 +83,7 @@ const RecordsTable = ({
                                                     <button
                                                         onClick={() => onMarkDelivered(sale._id)}
                                                         title="Mark as Delivered"
-                                                        className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded bg-white border border-indigo-100 transition-colors"
+                                                        className="p-1.5 text-black hover:bg-gray-100 rounded bg-white border border-gray-200 transition-colors"
                                                     >
                                                         <FiTruck size={16} />
                                                     </button>
