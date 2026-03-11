@@ -3,9 +3,18 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/sales`;
 
-// Get all sales
-const getSales = async () => {
-    const response = await axios.get(API_URL);
+// Get all sales (supports pagination, date filters, and analytics)
+const getSales = async (params = {}) => {
+    // Example params: { page: 1, limit: 50, startDate: '2023-01-01', endDate: '2023-01-31', includeAnalytics: true }
+    const urlParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+            urlParams.append(key, value);
+        }
+    });
+    
+    const url = `${API_URL}${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
+    const response = await axios.get(url);
     return response.data;
 };
 

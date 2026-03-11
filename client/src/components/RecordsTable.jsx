@@ -15,6 +15,7 @@ export const getPaidTotal = (sale) => {
     return sale.paymentStatus === 'paid' ? (sale.price || 0) : 0;
 };
 
+// ... existing badgess and helpers (cut for brevity but kept in code)
 const OverallBadge = ({ sale }) => {
     if (!sale.items || sale.items.length === 0) {
         return <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider ${sale.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{sale.paymentStatus === 'paid' ? 'Paid' : 'Pending'}</span>;
@@ -106,7 +107,6 @@ const SaleCard = ({ sale, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete,
                 {sale.deliveryStatus === 'pending' && (
                     <ActionBtn onClick={() => onMarkDelivered(sale._id)} title="Mark as Delivered" color="yellow"><FiTruck size={16} /></ActionBtn>
                 )}
-                {/* Receipt button — always visible for paid orders */}
                 {sale.paymentStatus === 'paid' && (
                     <ActionBtn onClick={() => onShowReceipt(sale)} title="View / Share Receipt" color="purple"><FiFileText size={16} /></ActionBtn>
                 )}
@@ -116,13 +116,13 @@ const SaleCard = ({ sale, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete,
     );
 };
 
-const RecordsTable = ({ groupedSales, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete, onWhatsAppReminder, onShowReceipt }) => {
+const RecordsTable = ({ groupedSales, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete, onWhatsAppReminder, onShowReceipt, hasNextPage, onLoadMore, isLoadingMore }) => {
     if (Object.keys(groupedSales).length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400">
                 <FiInbox size={48} className="mb-4 text-gray-300" />
                 <p className="font-bold text-gray-500">No records found</p>
-                <p className="text-sm">Add a new sale to get started</p>
+                <p className="text-sm">Adjust your filters or add a sale</p>
             </div>
         );
     }
@@ -229,6 +229,23 @@ const RecordsTable = ({ groupedSales, onMarkItemPaid, onMarkPaid, onMarkDelivere
                     </div>
                 </div>
             ))}
+
+            {/* Pagination Load More */}
+            {hasNextPage && (
+                <div className="pt-4 flex justify-center">
+                    <button
+                        onClick={onLoadMore}
+                        disabled={isLoadingMore}
+                        className="px-6 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-900 hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center min-w-[150px]"
+                    >
+                        {isLoadingMore ? (
+                            <span className="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"></span>
+                        ) : (
+                            'Load Older Records'
+                        )}
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
