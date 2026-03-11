@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { salesService } from '../services/api';
 import Header from '../components/Header';
+import SearchModal from '../components/SearchModal';
 import SummaryCards from '../components/SummaryCards';
 import SalesEntryForm from '../components/SalesEntryForm';
 import FilterSection from '../components/FilterSection';
@@ -17,6 +18,9 @@ const Dashboard = () => {
     const [sales, setSales] = useState([]);
     const [filter, setFilter] = useState('All');
     const [loading, setLoading] = useState(true);
+
+    // Search
+    const [showSearch, setShowSearch] = useState(false);
 
     // Receipt modal
     const [showReceiptModal, setShowReceiptModal] = useState(false);
@@ -242,7 +246,7 @@ const Dashboard = () => {
 
     return (
         <div className="min-h-screen bg-gray-50" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-            <Header />
+            <Header onSearchOpen={() => setShowSearch(true)} />
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-20">
                 <SummaryCards
@@ -272,6 +276,14 @@ const Dashboard = () => {
                     )}
                 </div>
             </main>
+
+            {/* ── Search Modal ──────────────────────────────────────────────────── */}
+            <SearchModal
+                open={showSearch}
+                onClose={() => setShowSearch(false)}
+                sales={sales}
+                onShowReceipt={showReceipt}
+            />
 
             {/* ── Receipt Modal ─────────────────────────────────────────────────── */}
             {showReceiptModal && (
