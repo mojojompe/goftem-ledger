@@ -1,100 +1,164 @@
 import React from 'react';
-import { format } from 'date-fns';
-import { FiCheck, FiTruck, FiTrash2, FiMessageCircle } from 'react-icons/fi';
+import { FiCheck, FiTruck, FiTrash2, FiMessageCircle, FiInbox } from 'react-icons/fi';
 
-const RecordsTable = ({
-    groupedSales,
-    onMarkPaid,
-    onMarkDelivered,
-    onDelete,
-    onWhatsAppReminder,
-}) => {
+const PaymentBadge = ({ status }) => (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider ${status === 'paid'
+            ? 'bg-green-100 text-green-700'
+            : 'bg-yellow-100 text-yellow-700'
+        }`}>
+        {status === 'paid' ? 'Paid' : 'Pending'}
+    </span>
+);
+
+const DeliveryBadge = ({ status }) => (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider ${status === 'delivered'
+            ? 'bg-green-100 text-green-700'
+            : 'bg-gray-100 text-gray-600'
+        }`}>
+        {status === 'delivered' ? 'Delivered' : 'Pending'}
+    </span>
+);
+
+const ActionBtn = ({ onClick, title, color, children }) => {
+    const colors = {
+        green: 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100',
+        black: 'bg-gray-50 text-gray-900 border-gray-200 hover:bg-gray-100',
+        yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200 hover:bg-yellow-100',
+        red: 'bg-red-50 text-red-500 border-red-200 hover:bg-red-100',
+    };
+    return (
+        <button
+            onClick={onClick}
+            title={title}
+            className={`p-2.5 rounded-xl border ${colors[color]} transition-all active:scale-90`}
+        >
+            {children}
+        </button>
+    );
+};
+
+/** Mobile-friendly card view for each sale */
+const SaleCard = ({ sale, onMarkPaid, onMarkDelivered, onDelete, onWhatsAppReminder }) => (
+    <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm space-y-3">
+        <div className="flex items-start justify-between gap-3">
+            <div>
+                <p className="font-bold text-gray-900 text-sm">{sale.buyerName}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{sale.item}</p>
+            </div>
+            <p className="font-black text-gray-900 text-base shrink-0">₦{sale.price.toLocaleString()}</p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+            <PaymentBadge status={sale.paymentStatus} />
+            <DeliveryBadge status={sale.deliveryStatus} />
+        </div>
+
+        <div className="flex gap-2 pt-1">
+            {sale.paymentStatus === 'pending' && (
+                <ActionBtn onClick={() => onWhatsAppReminder(sale)} title="WhatsApp Reminder" color="green">
+                    <FiMessageCircle size={16} />
+                </ActionBtn>
+            )}
+            {sale.paymentStatus === 'pending' && (
+                <ActionBtn onClick={() => onMarkPaid(sale)} title="Mark as Paid" color="black">
+                    <FiCheck size={16} />
+                </ActionBtn>
+            )}
+            {sale.deliveryStatus === 'pending' && (
+                <ActionBtn onClick={() => onMarkDelivered(sale._id)} title="Mark as Delivered" color="yellow">
+                    <FiTruck size={16} />
+                </ActionBtn>
+            )}
+            <ActionBtn onClick={() => onDelete(sale._id)} title="Delete" color="red">
+                <FiTrash2 size={16} />
+            </ActionBtn>
+        </div>
+    </div>
+);
+
+const RecordsTable = ({ groupedSales, onMarkPaid, onMarkDelivered, onDelete, onWhatsAppReminder }) => {
     if (Object.keys(groupedSales).length === 0) {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center text-gray-500">
-                No sales records found.
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <FiInbox size={48} className="mb-4 text-gray-300" />
+                <p className="font-bold text-gray-500">No records found</p>
+                <p className="text-sm">Add a new sale to get started</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6">
             {Object.entries(groupedSales).map(([dateLabel, salesArray]) => (
-                <div key={dateLabel} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
-                        <h3 className="font-bold text-gray-800 text-lg">{dateLabel} Sales</h3>
+                <div key={dateLabel}>
+                    {/* Date Group Header */}
+                    <div className="flex items-center gap-3 mb-3">
+                        <p className="text-sm font-black text-gray-800">{dateLabel}</p>
+                        <span className="bg-black text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
+                            {salesArray.length}
+                        </span>
+                        <div className="flex-1 h-px bg-gray-100"></div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-white border-b border-gray-100 text-sm font-medium text-gray-500 uppercase tracking-wider">
-                                    <th className="p-4 pl-6">Name</th>
-                                    <th className="p-4">Item</th>
-                                    <th className="p-4">Price</th>
-                                    <th className="p-4">Payment</th>
-                                    <th className="p-4">Delivery</th>
-                                    <th className="p-4 text-center">Actions</th>
+                    {/* Mobile: card stacks, Desktop: table */}
+                    <div className="block md:hidden space-y-3">
+                        {salesArray.map(sale => (
+                            <SaleCard
+                                key={sale._id}
+                                sale={sale}
+                                onMarkPaid={onMarkPaid}
+                                onMarkDelivered={onMarkDelivered}
+                                onDelete={onDelete}
+                                onWhatsAppReminder={onWhatsAppReminder}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Desktop table */}
+                    <div className="hidden md:block bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 border-b border-gray-100">
+                                <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+                                    <th className="px-5 py-4">Name</th>
+                                    <th className="px-5 py-4">Item</th>
+                                    <th className="px-5 py-4">Price</th>
+                                    <th className="px-5 py-4 text-center">Payment</th>
+                                    <th className="px-5 py-4 text-center">Delivery</th>
+                                    <th className="px-5 py-4 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {salesArray.map((sale) => (
-                                    <tr key={sale._id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-4 pl-6 font-medium text-gray-900 whitespace-nowrap">{sale.buyerName}</td>
-                                        <td className="p-4 text-gray-600 whitespace-nowrap">{sale.item}</td>
-                                        <td className="p-4 font-semibold text-gray-800 whitespace-nowrap">₦{sale.price.toLocaleString()}</td>
-
-                                        {/* Payment Status Badge */}
-                                        <td className="p-4 whitespace-nowrap">
-                                            <span className={`badge ${sale.paymentStatus === 'paid' ? 'badge-success' : 'badge-warning'}`}>
-                                                {sale.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
-                                            </span>
+                                    <tr key={sale._id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-5 py-4 font-bold text-gray-900 whitespace-nowrap">{sale.buyerName}</td>
+                                        <td className="px-5 py-4 text-gray-600 whitespace-nowrap">{sale.item}</td>
+                                        <td className="px-5 py-4 font-black text-gray-900 whitespace-nowrap">₦{sale.price.toLocaleString()}</td>
+                                        <td className="px-5 py-4 text-center whitespace-nowrap">
+                                            <PaymentBadge status={sale.paymentStatus} />
                                         </td>
-
-                                        {/* Delivery Status Badge */}
-                                        <td className="p-4 whitespace-nowrap">
-                                            <span className={`badge ${sale.deliveryStatus === 'delivered' ? 'badge-success' : 'badge-primary'}`}>
-                                                {sale.deliveryStatus === 'delivered' ? 'Delivered' : 'Pending'}
-                                            </span>
+                                        <td className="px-5 py-4 text-center whitespace-nowrap">
+                                            <DeliveryBadge status={sale.deliveryStatus} />
                                         </td>
-
-                                        {/* Actions */}
-                                        <td className="p-4">
-                                            <div className="flex items-center justify-center space-x-2">
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center justify-center gap-2">
                                                 {sale.paymentStatus === 'pending' && (
-                                                    <button
-                                                        onClick={() => onWhatsAppReminder(sale)}
-                                                        title="WhatsApp Reminder"
-                                                        className="p-1.5 text-green-500 hover:bg-green-50 rounded bg-white border border-green-100 transition-colors"
-                                                    >
-                                                        <FiMessageCircle size={16} />
-                                                    </button>
+                                                    <ActionBtn onClick={() => onWhatsAppReminder(sale)} title="WhatsApp Reminder" color="green">
+                                                        <FiMessageCircle size={15} />
+                                                    </ActionBtn>
                                                 )}
                                                 {sale.paymentStatus === 'pending' && (
-                                                    <button
-                                                        onClick={() => onMarkPaid(sale)}
-                                                        title="Mark as Paid"
-                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded bg-white border border-green-100 transition-colors"
-                                                    >
-                                                        <FiCheck size={16} />
-                                                    </button>
+                                                    <ActionBtn onClick={() => onMarkPaid(sale)} title="Mark as Paid" color="black">
+                                                        <FiCheck size={15} />
+                                                    </ActionBtn>
                                                 )}
                                                 {sale.deliveryStatus === 'pending' && (
-                                                    <button
-                                                        onClick={() => onMarkDelivered(sale._id)}
-                                                        title="Mark as Delivered"
-                                                        className="p-1.5 text-black hover:bg-gray-100 rounded bg-white border border-gray-200 transition-colors"
-                                                    >
-                                                        <FiTruck size={16} />
-                                                    </button>
+                                                    <ActionBtn onClick={() => onMarkDelivered(sale._id)} title="Mark as Delivered" color="yellow">
+                                                        <FiTruck size={15} />
+                                                    </ActionBtn>
                                                 )}
-                                                <button
-                                                    onClick={() => onDelete(sale._id)}
-                                                    title="Delete Record"
-                                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded bg-white border border-red-100 transition-colors"
-                                                >
-                                                    <FiTrash2 size={16} />
-                                                </button>
+                                                <ActionBtn onClick={() => onDelete(sale._id)} title="Delete" color="red">
+                                                    <FiTrash2 size={15} />
+                                                </ActionBtn>
                                             </div>
                                         </td>
                                     </tr>

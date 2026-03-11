@@ -1,25 +1,25 @@
 import React from 'react';
 
-const FilterSection = ({ currentFilter, onFilterChange }) => {
-    const filters = [
-        { id: 'All', label: 'All' },
-        { id: 'Today', label: 'Today' },
-        { id: 'Pending Payments', label: 'Pending Payments' },
-        { id: 'Paid', label: 'Paid' },
-    ];
+const filters = [
+    { id: 'All', label: 'All' },
+    { id: 'Today', label: 'Today' },
+    { id: 'Pending Payments', label: 'Pending' },
+    { id: 'Paid', label: 'Paid' },
+];
 
+const FilterSection = ({ currentFilter, onFilterChange }) => {
     return (
-        <div className="flex flex-wrap gap-3 mb-6">
-            {filters.map((filter) => (
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-4 no-scrollbar">
+            {filters.map((f) => (
                 <button
-                    key={filter.id}
-                    onClick={() => onFilterChange(filter.id)}
-                    className={`px-5 py-2 rounded-full text-sm font-bold transition-colors ${currentFilter === filter.id
-                        ? 'bg-black text-white shadow-md'
-                        : 'bg-white text-gray-800 border border-gray-200 hover:bg-gray-50'
+                    key={f.id}
+                    onClick={() => onFilterChange(f.id)}
+                    className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95 ${currentFilter === f.id
+                            ? 'bg-black text-white shadow-md'
+                            : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
                         }`}
                 >
-                    {filter.label}
+                    {f.label}
                 </button>
             ))}
         </div>

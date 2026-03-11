@@ -6,17 +6,21 @@ export default {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                sans: ['Inter', 'system-ui', 'sans-serif'],
+            },
             colors: {
-                primary: "#000000",
                 gold: {
-                    400: "#facc15",
-                    500: "#eab308",
-                    600: "#ca8a04",
+                    50: '#fffbeb',
+                    100: '#fef3c7',
+                    400: '#fbbf24',
+                    500: '#f59e0b',
+                    600: '#d97706',
                 },
-                success: "#16a34a",
-                warning: "#eab308",
-                danger: "#dc2626",
-            }
+            },
+            backdropBlur: {
+                xs: '2px',
+            },
         },
     },
     plugins: [],
