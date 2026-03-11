@@ -68,19 +68,19 @@ const FilterSection = ({
                 </div>
 
                 {/* Right: Date Picker & Export */}
-                <div className="flex items-center gap-2 self-start sm:self-auto relative">
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto relative w-full sm:w-auto">
                     <button
                         onClick={() => setShowDateCustomizer(!showDateCustomizer)}
-                        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                        <FiCalendar size={14} className="text-gray-400" />
-                        {getDateLabel()}
+                        <FiCalendar size={14} className="text-gray-400 shrink-0" />
+                        <span className="truncate">{getDateLabel()}</span>
                     </button>
 
                     <button
                         onClick={onExportExcel}
                         disabled={isExporting}
-                        className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-bold hover:bg-green-100 transition-colors disabled:opacity-50"
+                        className="flex-shrink-0 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-bold hover:bg-green-100 transition-colors disabled:opacity-50"
                         title="Export current view to Excel"
                     >
                         <FiDownload size={14} />
