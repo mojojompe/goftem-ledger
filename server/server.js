@@ -3,9 +3,6 @@ const express = require('express');
 const connectDB = require('./database/db');
 const salesRoutes = require('./routes/salesRoutes');
 
-// Connect to database
-connectDB();
-
 const app = express();
 
 // ── CORS (must come before all routes) ──────────────────────────────────────
@@ -23,13 +20,23 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-
     if (req.method === 'OPTIONS') return res.status(200).end();
     next();
 });
 
 // ── Body parser ──────────────────────────────────────────────────────────────
 app.use(express.json());
+
+// ── DB middleware — connect before every request (cached by isConnected) ─────
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        console.error('DB connection failed:', err.message);
+        res.status(500).json({ message: 'Database connection failed' });
+    }
+});
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/sales', salesRoutes);
@@ -38,9 +45,7 @@ app.get('/', (req, res) => {
     res.send('GOFTEM STORES API is running...');
 });
 
-// ── Server ───────────────────────────────────────────────────────────────────
-// app.listen is skipped on Vercel (serverless) — the module export is used instead.
-// For local dev, listen normally.
+// ── Local dev server ─────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
