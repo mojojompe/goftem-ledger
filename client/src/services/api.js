@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = '/api/sales';
+const BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = `${BASE_URL}/api/sales`;
 
 // Get all sales
 const getSales = async () => {
