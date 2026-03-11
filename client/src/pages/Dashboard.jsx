@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import SummaryCards from '../components/SummaryCards';
 import SalesEntryForm from '../components/SalesEntryForm';
 import FilterSection from '../components/FilterSection';
-import RecordsTable from '../components/RecordsTable';
+import RecordsTable, { getSaleTotal } from '../components/RecordsTable';
 import Receipt from '../components/Receipt';
 import { format, isToday } from 'date-fns';
 import jsPDF from 'jspdf';
@@ -82,7 +82,11 @@ const Dashboard = () => {
     };
 
     const handleWhatsAppReminder = (sale) => {
-        const message = `Hello ${sale.buyerName}, this is GOFTEM STORES.\n\nThis is a reminder that your payment for:\n\nItem: ${sale.item}\nPrice: ₦${sale.price.toLocaleString()}\n\nis still pending.\n\nThank you.`;
+        const itemsList = sale.items && sale.items.length > 0
+            ? sale.items.map(i => `• ${i.name}: ₦${i.price.toLocaleString()}`).join('\n')
+            : `• ${sale.item}: ₦${sale.price?.toLocaleString()}`;
+        const total = getSaleTotal(sale);
+        const message = `Hello ${sale.buyerName}, this is GOFTEM STORES.\n\nThis is a reminder that your payment for the following items is still pending:\n\n${itemsList}\n\nTotal: ₦${total.toLocaleString()}\n\nThank you.`;
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
@@ -109,7 +113,11 @@ const Dashboard = () => {
     };
 
     const shareReceiptWhatsApp = async () => {
-        const textMessage = `Hello ${currentReceiptData.buyerName}, here is your receipt from GOFTEM STORES.\n\nItem: ${currentReceiptData.item}\nAmount: ₦${Number(currentReceiptData.price).toLocaleString()}\nStatus: PAID ✅\nDate: ${format(new Date(currentReceiptData.date), 'MMM dd, yyyy')}\n\nThank you for your business! 🙏`;
+        const receiptItems = currentReceiptData.items && currentReceiptData.items.length > 0
+            ? currentReceiptData.items.map(i => `• ${i.name}: ₦${i.price.toLocaleString()}`).join('\n')
+            : `• ${currentReceiptData.item}: ₦${currentReceiptData.price?.toLocaleString()}`;
+        const receiptTotal = getSaleTotal(currentReceiptData);
+        const textMessage = `Hello ${currentReceiptData.buyerName}, here is your receipt from GOFTEM STORES.\n\n${receiptItems}\n\nTotal: ₦${receiptTotal.toLocaleString()}\nStatus: PAID ✅\nDate: ${format(new Date(currentReceiptData.date), 'MMM dd, yyyy')}\n\nThank you for your business! 🙏`;
 
         // Try to share image via Web Share API (works on mobile)
         try {
@@ -137,7 +145,7 @@ const Dashboard = () => {
     const totalSalesToday = todaySales.length;
     const pendingPayments = sales.filter(s => s.paymentStatus === 'pending').length;
     const paidOrders = sales.filter(s => s.paymentStatus === 'paid').length;
-    const totalRevenueToday = todaySales.filter(s => s.paymentStatus === 'paid').reduce((sum, s) => sum + s.price, 0);
+    const totalRevenueToday = todaySales.filter(s => s.paymentStatus === 'paid').reduce((sum, s) => sum + getSaleTotal(s), 0);
 
     // Filter
     const filteredSales = sales.filter(sale => {

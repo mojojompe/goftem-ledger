@@ -4,6 +4,13 @@ import { format } from 'date-fns';
 const Receipt = forwardRef(({ receiptData }, ref) => {
     if (!receiptData) return null;
 
+    // Support both old (single item) and new (items array) format
+    const items = receiptData.items && receiptData.items.length > 0
+        ? receiptData.items
+        : receiptData.item ? [{ name: receiptData.item, price: receiptData.price }] : [];
+
+    const total = items.reduce((sum, i) => sum + i.price, 0);
+
     return (
         <div
             ref={ref}
@@ -11,15 +18,12 @@ const Receipt = forwardRef(({ receiptData }, ref) => {
             className="bg-white relative overflow-hidden"
         >
             {/* Watermark */}
-            <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                    backgroundImage: 'url(/Flier.png)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    opacity: 0.06,
-                }}
-            />
+            <div className="absolute inset-0 pointer-events-none" style={{
+                backgroundImage: 'url(/Flier.png)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.06,
+            }} />
 
             {/* Content */}
             <div className="relative px-7 py-8">
@@ -30,13 +34,12 @@ const Receipt = forwardRef(({ receiptData }, ref) => {
                     <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest mt-1">Official Receipt</p>
                 </div>
 
-                {/* Fields */}
-                <div className="space-y-3 mb-6">
+                {/* Info */}
+                <div className="space-y-2 mb-5">
                     {[
                         { label: 'Receipt ID', value: `#${receiptData._id?.substring(0, 8).toUpperCase() || 'N/A'}` },
                         { label: 'Date', value: receiptData.date ? format(new Date(receiptData.date), 'MMM dd, yyyy') : '' },
                         { label: 'Buyer', value: receiptData.buyerName },
-                        { label: 'Item', value: receiptData.item },
                     ].map(({ label, value }) => (
                         <div key={label} className="flex justify-between items-center">
                             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</span>
@@ -45,10 +48,26 @@ const Receipt = forwardRef(({ receiptData }, ref) => {
                     ))}
                 </div>
 
-                {/* Amount */}
+                {/* Items */}
+                <div className="border border-gray-100 rounded-xl overflow-hidden mb-5">
+                    <div className="bg-gray-50 px-4 py-2 flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                        <span>Item</span>
+                        <span>Price</span>
+                    </div>
+                    {items.map((item, i) => (
+                        <div key={i} className="px-4 py-2.5 flex justify-between items-center border-t border-gray-50">
+                            <span className="text-sm font-semibold text-gray-800 truncate max-w-[180px]">{item.name}</span>
+                            <span className="text-sm font-bold text-gray-900 shrink-0">₦{item.price.toLocaleString()}</span>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Total */}
                 <div className="bg-black rounded-xl px-5 py-4 flex justify-between items-center mb-5">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Amount Paid</span>
-                    <span className="text-xl font-black text-yellow-400">₦{Number(receiptData.price).toLocaleString()}</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        {items.length > 1 ? `Total (${items.length} items)` : 'Amount Paid'}
+                    </span>
+                    <span className="text-xl font-black text-yellow-400">₦{total.toLocaleString()}</span>
                 </div>
 
                 {/* Status */}
