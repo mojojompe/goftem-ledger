@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const connectDB = require('./database/db');
 const salesRoutes = require('./routes/salesRoutes');
 
@@ -9,8 +8,8 @@ connectDB();
 
 const app = express();
 
-// CORS — must be FIRST, before all routes
-const allowedOrigins = [
+// ── CORS (must come before all routes) ──────────────────────────────────────
+const ALLOWED_ORIGINS = [
     'https://goftem-sales.vercel.app',
     'http://localhost:5173',
     'http://localhost:3000',
@@ -18,30 +17,33 @@ const allowedOrigins = [
 
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
+    if (ALLOWED_ORIGINS.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-    // Handle preflight
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    if (req.method === 'OPTIONS') return res.status(200).end();
     next();
 });
 
+// ── Body parser ──────────────────────────────────────────────────────────────
 app.use(express.json());
 
-// Routes
+// ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/sales', salesRoutes);
 
-// Base route
 app.get('/', (req, res) => {
     res.send('GOFTEM STORES API is running...');
 });
 
-const PORT = process.env.PORT || 5000;
+// ── Server ───────────────────────────────────────────────────────────────────
+// app.listen is skipped on Vercel (serverless) — the module export is used instead.
+// For local dev, listen normally.
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+module.exports = app;
