@@ -1,28 +1,23 @@
 import React from 'react';
-import { FiCheck, FiTruck, FiTrash2, FiMessageCircle, FiInbox, FiClock } from 'react-icons/fi';
+import { FiCheck, FiTruck, FiTrash2, FiMessageCircle, FiInbox, FiClock, FiFileText } from 'react-icons/fi';
 
-// Helper: get total price from a sale (handles old single-item and new multi-item)
 export const getSaleTotal = (sale) => {
     if (sale.items && sale.items.length > 0) {
-        return sale.items.reduce((sum, i) => sum + i.price, 0);
+        return sale.items.reduce((sum, i) => sum + i.price * (i.quantity || 1), 0);
     }
     return sale.price || 0;
 };
 
 export const getPaidTotal = (sale) => {
     if (sale.items && sale.items.length > 0) {
-        return sale.items.filter(i => i.paymentStatus === 'paid').reduce((sum, i) => sum + i.price, 0);
+        return sale.items.filter(i => i.paymentStatus === 'paid').reduce((sum, i) => sum + i.price * (i.quantity || 1), 0);
     }
     return sale.paymentStatus === 'paid' ? (sale.price || 0) : 0;
 };
 
 const OverallBadge = ({ sale }) => {
-    if (!sale.items || sale.items.length <= 1) {
-        return (
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
-                sale.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-            }`}>{sale.paymentStatus === 'paid' ? 'Paid' : 'Pending'}</span>
-        );
+    if (!sale.items || sale.items.length === 0) {
+        return <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider ${sale.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{sale.paymentStatus === 'paid' ? 'Paid' : 'Pending'}</span>;
     }
     const paidCount = sale.items.filter(i => i.paymentStatus === 'paid').length;
     const total = sale.items.length;
@@ -32,27 +27,44 @@ const OverallBadge = ({ sale }) => {
 };
 
 const DeliveryBadge = ({ status }) => (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
-        status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-    }`}>{status === 'delivered' ? 'Delivered' : 'Pending'}</span>
+    <span className={`inline-flex px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider ${status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{status === 'delivered' ? 'Delivered' : 'Pending'}</span>
 );
 
-const ActionBtn = ({ onClick, title, color, children, small }) => {
+const ActionBtn = ({ onClick, title, color, children }) => {
     const colors = {
         green: 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100',
         black: 'bg-gray-50 text-gray-900 border-gray-200 hover:bg-gray-100',
         yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200 hover:bg-yellow-100',
         red: 'bg-red-50 text-red-500 border-red-200 hover:bg-red-100',
+        purple: 'bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100',
     };
     return (
-        <button onClick={onClick} title={title} className={`${small ? 'p-1.5' : 'p-2.5'} rounded-xl border ${colors[color]} transition-all active:scale-90`}>
+        <button onClick={onClick} title={title} className={`p-2.5 rounded-xl border ${colors[color]} transition-all active:scale-90`}>
             {children}
         </button>
     );
 };
 
-// Mobile Card
-const SaleCard = ({ sale, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete, onWhatsAppReminder }) => {
+const ItemRow = ({ item, saleId, idx, onMarkItemPaid }) => (
+    <div className="flex items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-gray-800 truncate">{item.name}</p>
+            <p className="text-xs text-gray-400">
+                ₦{item.price.toLocaleString()}{(item.quantity || 1) > 1 ? ` × ${item.quantity}` : ''}
+                {(item.quantity || 1) > 1 && <span className="ml-1 font-bold text-gray-600">= ₦{(item.price * item.quantity).toLocaleString()}</span>}
+            </p>
+        </div>
+        {item.paymentStatus === 'paid' ? (
+            <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] font-bold uppercase shrink-0"><FiCheck size={10} /> Paid</span>
+        ) : (
+            <button onClick={() => onMarkItemPaid(saleId, idx)} className="flex items-center gap-1 px-2 py-1 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-lg text-[10px] font-bold uppercase shrink-0 hover:bg-yellow-100 active:scale-95 transition-all">
+                <FiClock size={10} /> Mark Paid
+            </button>
+        )}
+    </div>
+);
+
+const SaleCard = ({ sale, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete, onWhatsAppReminder, onShowReceipt }) => {
     const total = getSaleTotal(sale);
     const paidTotal = getPaidTotal(sale);
     const hasMultiItems = sale.items && sale.items.length > 1;
@@ -69,28 +81,10 @@ const SaleCard = ({ sale, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete,
                 </div>
             </div>
 
-            {/* Items with per-item status */}
             {sale.items && sale.items.length > 0 ? (
-                <div className="space-y-2 bg-gray-50 rounded-xl p-3">
+                <div className="bg-gray-50 rounded-xl p-3 space-y-2">
                     {sale.items.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-gray-800 truncate">{item.name}</p>
-                                <p className="text-xs text-gray-500">₦{item.price.toLocaleString()}</p>
-                            </div>
-                            {item.paymentStatus === 'paid' ? (
-                                <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] font-bold uppercase shrink-0">
-                                    <FiCheck size={10} /> Paid
-                                </span>
-                            ) : (
-                                <button
-                                    onClick={() => onMarkItemPaid(sale._id, i)}
-                                    className="flex items-center gap-1 px-2 py-1 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-lg text-[10px] font-bold uppercase shrink-0 hover:bg-yellow-100 active:scale-95 transition-all"
-                                >
-                                    <FiClock size={10} /> Mark Paid
-                                </button>
-                            )}
-                        </div>
+                        <ItemRow key={i} item={item} saleId={sale._id} idx={i} onMarkItemPaid={onMarkItemPaid} />
                     ))}
                 </div>
             ) : (
@@ -102,24 +96,27 @@ const SaleCard = ({ sale, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete,
                 <DeliveryBadge status={sale.deliveryStatus} />
             </div>
 
-            <div className="flex gap-2 pt-1">
+            <div className="flex flex-wrap gap-2 pt-1">
                 {sale.paymentStatus === 'pending' && (
                     <ActionBtn onClick={() => onWhatsAppReminder(sale)} title="WhatsApp Reminder" color="green"><FiMessageCircle size={16} /></ActionBtn>
                 )}
-                {/* Only show whole-sale mark paid if no multi-items or single item */}
                 {sale.paymentStatus === 'pending' && (!sale.items || sale.items.length <= 1) && (
                     <ActionBtn onClick={() => onMarkPaid(sale)} title="Mark as Paid" color="black"><FiCheck size={16} /></ActionBtn>
                 )}
                 {sale.deliveryStatus === 'pending' && (
                     <ActionBtn onClick={() => onMarkDelivered(sale._id)} title="Mark as Delivered" color="yellow"><FiTruck size={16} /></ActionBtn>
                 )}
-                <ActionBtn onClick={() => onDelete(sale._id)} title="Delete" color="red"><FiTrash2 size={16} /></ActionBtn>
+                {/* Receipt button — always visible for paid orders */}
+                {sale.paymentStatus === 'paid' && (
+                    <ActionBtn onClick={() => onShowReceipt(sale)} title="View / Share Receipt" color="purple"><FiFileText size={16} /></ActionBtn>
+                )}
+                <ActionBtn onClick={() => onDelete(sale)} title="Delete" color="red"><FiTrash2 size={16} /></ActionBtn>
             </div>
         </div>
     );
 };
 
-const RecordsTable = ({ groupedSales, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete, onWhatsAppReminder }) => {
+const RecordsTable = ({ groupedSales, onMarkItemPaid, onMarkPaid, onMarkDelivered, onDelete, onWhatsAppReminder, onShowReceipt }) => {
     if (Object.keys(groupedSales).length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400">
@@ -149,6 +146,7 @@ const RecordsTable = ({ groupedSales, onMarkItemPaid, onMarkPaid, onMarkDelivere
                                 onMarkDelivered={onMarkDelivered}
                                 onDelete={onDelete}
                                 onWhatsAppReminder={onWhatsAppReminder}
+                                onShowReceipt={onShowReceipt}
                             />
                         ))}
                     </div>
@@ -173,24 +171,21 @@ const RecordsTable = ({ groupedSales, onMarkItemPaid, onMarkPaid, onMarkDelivere
                                     return (
                                         <tr key={sale._id} className="hover:bg-gray-50/50 transition-colors align-top">
                                             <td className="px-5 py-4 font-bold text-gray-900 whitespace-nowrap">{sale.buyerName}</td>
-                                            <td className="px-5 py-4 max-w-[250px]">
+                                            <td className="px-5 py-4 max-w-[260px]">
                                                 {sale.items && sale.items.length > 0 ? (
-                                                    <div className="space-y-1.5">
+                                                    <div className="space-y-2">
                                                         {sale.items.map((item, i) => (
-                                                            <div key={i} className="flex items-center justify-between gap-3">
+                                                            <div key={i} className="flex items-center justify-between gap-2">
                                                                 <div className="min-w-0">
                                                                     <span className="text-xs font-semibold text-gray-800 truncate block">{item.name}</span>
-                                                                    <span className="text-xs text-gray-500">₦{item.price.toLocaleString()}</span>
+                                                                    <span className="text-xs text-gray-400">
+                                                                        ₦{item.price.toLocaleString()}{(item.quantity || 1) > 1 ? ` × ${item.quantity} = ₦${(item.price * item.quantity).toLocaleString()}` : ''}
+                                                                    </span>
                                                                 </div>
                                                                 {item.paymentStatus === 'paid' ? (
-                                                                    <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-lg text-[10px] font-bold uppercase shrink-0">
-                                                                        <FiCheck size={9} /> Paid
-                                                                    </span>
+                                                                    <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-lg text-[10px] font-bold uppercase shrink-0"><FiCheck size={9} /> Paid</span>
                                                                 ) : (
-                                                                    <button
-                                                                        onClick={() => onMarkItemPaid(sale._id, i)}
-                                                                        className="flex items-center gap-1 px-2 py-0.5 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-lg text-[10px] font-bold uppercase shrink-0 hover:bg-yellow-100 active:scale-95 transition-all"
-                                                                    >
+                                                                    <button onClick={() => onMarkItemPaid(sale._id, i)} className="flex items-center gap-1 px-2 py-0.5 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-lg text-[10px] font-bold uppercase shrink-0 hover:bg-yellow-100 active:scale-95 transition-all">
                                                                         <FiClock size={9} /> Pending
                                                                     </button>
                                                                 )}
@@ -202,7 +197,7 @@ const RecordsTable = ({ groupedSales, onMarkItemPaid, onMarkPaid, onMarkDelivere
                                                 )}
                                             </td>
                                             <td className="px-5 py-4 align-middle">
-                                                <p className="font-black text-gray-900 whitespace-nowrap">₦{total.toLocaleString()}</p>
+                                                <p className="font-black text-gray-900">₦{total.toLocaleString()}</p>
                                                 {paidTotal > 0 && paidTotal < total && (
                                                     <p className="text-[10px] text-green-600 font-bold">₦{paidTotal.toLocaleString()} paid</p>
                                                 )}
@@ -212,15 +207,18 @@ const RecordsTable = ({ groupedSales, onMarkItemPaid, onMarkPaid, onMarkDelivere
                                             <td className="px-5 py-4 align-middle">
                                                 <div className="flex items-center justify-center gap-2">
                                                     {sale.paymentStatus === 'pending' && (
-                                                        <ActionBtn onClick={() => onWhatsAppReminder(sale)} title="WhatsApp Reminder" color="green"><FiMessageCircle size={15} /></ActionBtn>
+                                                        <ActionBtn onClick={() => onWhatsAppReminder(sale)} title="Reminder" color="green"><FiMessageCircle size={15} /></ActionBtn>
                                                     )}
                                                     {sale.paymentStatus === 'pending' && (!sale.items || sale.items.length <= 1) && (
-                                                        <ActionBtn onClick={() => onMarkPaid(sale)} title="Mark as Paid" color="black"><FiCheck size={15} /></ActionBtn>
+                                                        <ActionBtn onClick={() => onMarkPaid(sale)} title="Mark Paid" color="black"><FiCheck size={15} /></ActionBtn>
                                                     )}
                                                     {sale.deliveryStatus === 'pending' && (
-                                                        <ActionBtn onClick={() => onMarkDelivered(sale._id)} title="Mark as Delivered" color="yellow"><FiTruck size={15} /></ActionBtn>
+                                                        <ActionBtn onClick={() => onMarkDelivered(sale._id)} title="Mark Delivered" color="yellow"><FiTruck size={15} /></ActionBtn>
                                                     )}
-                                                    <ActionBtn onClick={() => onDelete(sale._id)} title="Delete" color="red"><FiTrash2 size={15} /></ActionBtn>
+                                                    {sale.paymentStatus === 'paid' && (
+                                                        <ActionBtn onClick={() => onShowReceipt(sale)} title="View/Share Receipt" color="purple"><FiFileText size={15} /></ActionBtn>
+                                                    )}
+                                                    <ActionBtn onClick={() => onDelete(sale)} title="Delete" color="red"><FiTrash2 size={15} /></ActionBtn>
                                                 </div>
                                             </td>
                                         </tr>
