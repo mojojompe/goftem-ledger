@@ -228,7 +228,7 @@ const Dashboard = () => {
             return `• ${i.name}${qty > 1 ? ` (×${qty})` : ''}: ₦${(i.price * qty).toLocaleString()}`;
         }).join('\n');
         const total = getSaleTotal(rData);
-        const textMessage = `Hello ${rData.buyerName}, here is your receipt from GOFTEM STORES.\n\n${itemsList}\n\nTotal: ₦${total.toLocaleString()}\nStatus: PAID ✅\nDate: ${format(new Date(rData.date), 'MMM dd, yyyy')}\n\nThank you for your business! 🙏`;
+        const textMessage = `Hello ${rData.buyerName}, here is your receipt from GOFTEM STORES.\n\n${itemsList}\n\nTotal: ₦${total.toLocaleString()}\nStatus: PAID ✅\nDate: ${format(new Date(rData.date), 'MMM dd, yyyy')}\n\nThank you for your patronage!`;
 
         try {
             const canvas = await captureCanvas();

@@ -92,7 +92,7 @@ const Receipt = forwardRef(({ receiptData }, ref) => {
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#dcfce7', color: '#15803d', padding: '8px 16px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', border: '1px solid #bbf7d0' }}>
                             ✓ Payment Confirmed
                         </div>
-                        <p style={{ fontSize: '10px', color: '#d1d5db', marginTop: '16px', fontWeight: 600 }}>Thank you for your business!</p>
+                        <p style={{ fontSize: '10px', color: '#d1d5db', marginTop: '16px', fontWeight: 600 }}>Thank you for your patronage!</p>
                     </div>
                 </div>
             </div>
